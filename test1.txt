@@ -4,3 +4,4 @@ Dosya acildiktan sonra mutlaka kapatilmalidir; bunun icin with blogu kullanilir.
 python bellek yonetimi acisindan satir satir okuma yapmak buyuk dosyalarda hayat kurtarir.
 Satir sonlarindaki gizli karakterler bazen veri analizini bozabilir!
 Python, okunabilirligi yuksek ve guclu bir dildir.
+C++
