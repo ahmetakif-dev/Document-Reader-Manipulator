@@ -1,0 +1,4 @@
+İstanbul'da yağmurlu bir gün; ağacın yaprakları ıslanmış.
+"yazılım" yazarken dikkatli olmalısın, çünkü her yazılım parçası üretime çıkmaz!
+Kodlama süreci ile saf yazılım arasındaki farkı anlamak önemlidir.
+İyi bir mimari, gelecekteki hataları önler.

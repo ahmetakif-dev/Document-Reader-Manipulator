@@ -1,7 +1,4 @@
-Python ile dosya okuma islemleri temelde stream mantigiyla calisir.
-Dosya acildiktan sonra mutlaka kapatilmalidir; bunun icin with blogu kullanilir.
-
-python bellek yonetimi acisindan satir satir okuma yapmak buyuk dosyalarda hayat kurtarir.
-Satir sonlarindaki gizli karakterler bazen veri analizini bozabilir!
-Python, okunabilirligi yuksek ve guclu bir dildir.
-C++
+Sistem mimarisinde Rust, C# ve Python dilleri birlikte kullaniliyor.
+Rust performansi kritik olan modullerde tercih edildi.
+Fakat C++20 standartlari ile gelen yenilikler eski Rust derleyicilerinde calismaz.
+Veri tabani baglantisi icin config.json ve yedek_config.json dosyalari okundu.
