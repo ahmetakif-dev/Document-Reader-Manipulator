@@ -1,3 +1,4 @@
+import sys
 import os
 import re
 import collections
@@ -7,44 +8,62 @@ import tempfile
 class FileManipulator:
     def __init__(self, file_path):
         self.file_path = file_path
+        self.history = []
 
     def run_cli(self):
+        # Read the file content to ensure it exists and is accessible
         try:
-            with open(self.file_path, 'r', encoding='utf-8') as file:
-                pass
-        except FileNotFoundError or PermissionError:
+            self.read_file()
+        except (FileNotFoundError, PermissionError):
             print("FILE NOT FOUND. PLEASE CHECK THE FILE PATH.")
             return
+        # CLI loop
         while True:
             print("\nOPTIONS:")
             print("1. Show basic statistics")
             print("2. Show most repeated words")
-            print("3. Replace a word in the file")
-            print("4. Exit")
+            print("3. Replace word(s) in the file")
+            print("4. Undo last change")
+            print("5. Remove duplicate lines")
+            print("6. Exit")
             time.sleep(1)
-            choice = input("ENTER YOUR CHOICE (1-4): ").strip()
-            
+            choice = input("ENTER YOUR CHOICE (1-6): ").strip()
+
+            # Handle user choice
             if choice == "1":
                 stats = self.basic_stats()
                 print(stats)
                 time.sleep(5)
+
             elif choice == "2":
                 content = self.read_file()
                 top_n = self.top_n_words()
                 self.most_repeated_words(content, top_n)
                 time.sleep(5)
+
             elif choice == "3":
                 result = self.run_manipulation()
                 print(result)
                 time.sleep(5)
+
             elif choice == "4":
+                result = self.undo_last_change()
+                print(result)
+                time.sleep(1)
+
+            elif choice == "5":
+                result = self.remove_duplicate_lines(self.read_file())
+                print(result)
+
+            elif choice == "6":
                 print("EXITING...")
                 break
+                
             else:
-                print("INVALID CHOICE. PLEASE ENTER A NUMBER BETWEEN 1 AND 4.")
+                print("INVALID CHOICE. PLEASE ENTER A NUMBER BETWEEN 1 AND 6.")
                 time.sleep(1)
     
-    
+    # Read the file content
     def read_file(self):
         with open(self.file_path, 'r', encoding='utf-8') as file:
             content = list()
@@ -52,6 +71,7 @@ class FileManipulator:
                 content.append(line)
             return "".join(content)
 
+    # Calculate basic statistics of the file
     def basic_stats(self):
         empty_lines_count = 0
         words = 0        
@@ -65,9 +85,10 @@ class FileManipulator:
                 words += len(line.split())
             
             return f"Total lines: {total_lines_count} | Empty lines: {empty_lines_count} | Words: {words}"
-        except FileNotFoundError:
+        except (FileNotFoundError, PermissionError):
             return "FILE NOT FOUND"
 
+    # Get the number of top repeated words from the user
     def top_n_words(self):
         while True:
             try:
@@ -79,7 +100,7 @@ class FileManipulator:
             except ValueError:
                 print("INVALID INPUT. PLEASE ENTER A POSITIVE INTEGER.")
 
-
+    # Find the most repeated words in the file
     def most_repeated_words(self, content, top_n):
         if not content:
             return "FILE IS EMPTY"
@@ -94,14 +115,30 @@ class FileManipulator:
         
         top_n = min(top_n, len(word_count))        
         commons = word_count.most_common(top_n)
+
+        # Display the results in a formatted table
         max_word_len = max(len(word) for word, _ in commons) + 2
         max_count_len = max(len(str(count)) for _, count in commons)
         print("-" * (max_word_len + max_count_len + 6))
         for word, count in commons:
             print(f"{word:<{max_word_len}} | {count:>{max_count_len}}")
         print("-" * (max_word_len + max_count_len + 6))
-
     
+    # Save the current content to history for undo functionality
+    def save_history(self, old_content):
+        self.history.append(old_content)
+
+    def undo_last_change(self):
+        if self.history:
+            previous_content = self.history[-1]
+            write_status = self.safe_write_file(previous_content)
+            if write_status == "FILE WRITTEN SUCCESSFULLY":
+                self.history.pop()
+            return write_status
+
+        return "NO HISTORY TO UNDO"
+    
+    # Safely write content to the file using a temporary file
     def safe_write_file(self, content):
         target = self.file_path
         temp_path = None
@@ -121,6 +158,52 @@ class FileManipulator:
             return f"ERROR WRITING TO FILE: {e}"
         return "FILE WRITTEN SUCCESSFULLY"
         
+    # Get user confirmation to remove duplicate lines
+    def input_user_to_remove_duplicates(self):
+        while True:
+            question = input("DO YOU WANT TO REMOVE DUPLICATE LINES FROM THE FILE? (Y/N): ").strip().lower()
+            if question == "y":
+                return True
+            elif question == "n":
+                return False
+            print("INVALID INPUT. PLEASE ENTER 'Y' OR 'N'.")
+    
+    # Remove duplicate lines from the file content
+    def remove_duplicate_lines(self, content):
+        GREEN = '\033[92m'
+        RED = '\033[91m'
+        RESET = '\033[0m'
+        
+        lines = content.splitlines()
+        seen = set()
+        cleaned_lines = []
+        preview_lines = []
+        duplicate_count = 0
+        for line in lines:
+            if line in seen and line.strip() != "":
+                preview_lines.append(f"{RED}REMOVE | {line}{RESET}")
+                duplicate_count += 1
+            else:
+                seen.add(line)
+                preview_lines.append(f"{GREEN}KEEP | {line}{RESET}")
+                cleaned_lines.append(line)
+
+        if duplicate_count == 0:
+            return ("NO DUPLICATE LINES FOUND.")
+        
+        print("PREVIEW OF CHANGES:")
+        for preview_line in preview_lines:
+            print(preview_line)
+
+        if self.input_user_to_remove_duplicates():
+            self.save_history(content)
+            write_status =self.safe_write_file("\n".join(cleaned_lines))
+            if write_status != "FILE WRITTEN SUCCESSFULLY":
+                self.history.pop()  
+            return write_status
+        return "CHANGES NOT SAVED"
+
+    # Get user input for the word(s) replacement operation    
     def input_user_to_manipulate(self):
         while True:
             old_word = input("ENTER THE WORD YOU WANT TO REPLACE: ").strip()
@@ -128,27 +211,33 @@ class FileManipulator:
             if old_word and new_word:
                 return old_word, new_word
             print("INVALID INPUT. PLEASE ENTER NON-EMPTY STRINGS.")
-
+    
+    # Run the word replacement operation
     def run_manipulation(self):
         try:
             old_content = self.read_file()
-
-        except FileNotFoundError:
+            
+        except (FileNotFoundError, PermissionError):
             return "FILE NOT FOUND"    
-
+        
         new_content, count = self.manipulate_file(old_content, *self.input_user_to_manipulate())
+        
         if count == 0:
             return "NO MATCHES FOUND"
-
+        
         while True: 
             question = input(f"{count} MATCHES FOUND. DO YOU WANT TO SAVE THE CHANGES? (Y/N): ").strip().lower()        
             if question == "y":
+                self.save_history(old_content)
                 write_status = self.safe_write_file(new_content)
+                if write_status != "FILE WRITTEN SUCCESSFULLY":
+                    self.history.pop()
                 return write_status
             elif question == "n":
                 return "CHANGES NOT SAVED"
             print("INVALID INPUT. PLEASE ENTER 'Y' OR 'N'.")
 
+    # Replace words in the file content
     def manipulate_file(self, old_content, old_word, new_word):
         if old_word == "" or new_word == "":
             return old_content, 0
@@ -157,5 +246,7 @@ class FileManipulator:
         return new_content, count
 
 if __name__ == "__main__":
-    processor = FileManipulator("test1.txt")
+    # Get the file path from command line arguments or prompt the user
+    file_path = sys.argv[1] if len(sys.argv) > 1 else input("ENTER THE FILE PATH: ").strip()
+    processor = FileManipulator(file_path)
     processor.run_cli()

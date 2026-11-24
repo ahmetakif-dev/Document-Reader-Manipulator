@@ -1,7 +1,12 @@
-Baslik: Proje Yapilandirmasi
+apple
+banana
 
-    host = 127.0.0.1
-    port = 8080
 
-    debug_mode = True
-    # 127.0.0.1 adresi canli ortamda degistirilmelidir.
+
+
+
+
+orange
+kiwi
+
+cherry
