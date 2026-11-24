@@ -1,4 +1,4 @@
-Sistem mimarisinde Rust, C# ve Python dilleri birlikte kullaniliyor.
+Sistem mimarisinde Rust, C# ve Rust dilleri birlikte kullaniliyor.
 Rust performansi kritik olan modullerde tercih edildi.
 Fakat C++20 standartlari ile gelen yenilikler eski Rust derleyicilerinde calismaz.
 Veri tabani baglantisi icin config.json ve yedek_config.json dosyalari okundu.

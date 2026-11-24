@@ -1,10 +1,48 @@
 import re
 import collections
+import time
 
 class FileManipulator:
     def __init__(self, file_path):
         self.file_path = file_path
 
+    def run_cli(self):
+        try:
+            with open(self.file_path, 'r', encoding='utf-8') as file:
+                pass
+        except FileNotFoundError or PermissionError:
+            print("FILE NOT FOUND. PLEASE CHECK THE FILE PATH.")
+            return
+        while True:
+            print("\nOPTIONS:")
+            print("1. Show basic statistics")
+            print("2. Show most repeated words")
+            print("3. Replace a word in the file")
+            print("4. Exit")
+            time.sleep(1)
+            choice = input("ENTER YOUR CHOICE (1-4): ").strip()
+            
+            if choice == "1":
+                stats = self.basic_stats()
+                print(stats)
+                time.sleep(5)
+            elif choice == "2":
+                content = self.read_file()
+                top_n = self.top_n_words()
+                self.most_repeated_words(content, top_n)
+                time.sleep(5)
+            elif choice == "3":
+                result = self.run_manipulation()
+                print(result)
+                time.sleep(5)
+            elif choice == "4":
+                print("EXITING...")
+                break
+            else:
+                print("INVALID CHOICE. PLEASE ENTER A NUMBER BETWEEN 1 AND 4.")
+                time.sleep(1)
+    
+    
     def read_file(self):
         with open(self.file_path, 'r', encoding='utf-8') as file:
             content = list()
@@ -107,7 +145,5 @@ class FileManipulator:
         return new_content, count
 
 if __name__ == "__main__":
-    processor = FileManipulator("test2.txt")
-    content = processor.read_file()
-    top_n = processor.top_n_words()
-    processor.most_repeated_words(content, top_n)
+    processor = FileManipulator("test1.txt")
+    processor.run_cli()
