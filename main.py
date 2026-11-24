@@ -1,6 +1,8 @@
+import os
 import re
 import collections
 import time
+import tempfile
 
 class FileManipulator:
     def __init__(self, file_path):
@@ -100,14 +102,24 @@ class FileManipulator:
         print("-" * (max_word_len + max_count_len + 6))
 
     
-    def write_file(self, content):
-        try:
-            with open(self.file_path, 'w', encoding='utf-8') as file:
-                file.write(content)
-            return "FILE WRITTEN SUCCESSFULLY"
-        
+    def safe_write_file(self, content):
+        target = self.file_path
+        temp_path = None
+        try:        
+            with tempfile.NamedTemporaryFile('w', encoding='utf-8', delete=False, dir=os.path.dirname(target) or ".", suffix= ".tmp") as temp_file:
+                temp_path = temp_file.name
+                temp_file.write(content)
+                temp_file.flush()
+                os.fsync(temp_file.fileno())
+            os.replace(temp_path, target)
         except OSError as e:
-            return f"AN ERROR OCCURRED WHILE WRITING TO FILE: {e}"
+            if temp_path and os.path.exists(temp_path):
+                try:
+                    os.remove(temp_path)
+                except OSError:
+                    print(f"ERROR REMOVING TEMP FILE: {temp_path}")
+            return f"ERROR WRITING TO FILE: {e}"
+        return "FILE WRITTEN SUCCESSFULLY"
         
     def input_user_to_manipulate(self):
         while True:
@@ -131,7 +143,7 @@ class FileManipulator:
         while True: 
             question = input(f"{count} MATCHES FOUND. DO YOU WANT TO SAVE THE CHANGES? (Y/N): ").strip().lower()        
             if question == "y":
-                write_status = self.write_file(new_content)
+                write_status = self.safe_write_file(new_content)
                 return write_status
             elif question == "n":
                 return "CHANGES NOT SAVED"
